@@ -153,18 +153,18 @@ function CameraPlayer({ camera, mode, retryKey, onStatusChange }: { camera: Came
         const reason = await response.text().catch(() => '')
         throw new Error(`WHEP server returned ${response.status}${reason ? `: ${reason.slice(0, 140)}` : ''}`)
       }
-      if (handshakeTimeout !== undefined) window.clearTimeout(handshakeTimeout)
-
       const location = response.headers.get('Location')
       if (location) whepSessionUrl = new URL(location, camera.whepUrl).toString()
       const answer = await response.text()
       await connection.setRemoteDescription({ type: 'answer', sdp: answer })
+      if (handshakeTimeout !== undefined) window.clearTimeout(handshakeTimeout)
     }
 
     if (mode === 'hls') {
       void startHls()
     } else {
       void startWebRtc().catch(cause => {
+        if (handshakeTimeout !== undefined) window.clearTimeout(handshakeTimeout)
         if (cause instanceof Error && cause.name === 'AbortError') {
           setSafeState('error', 'WebRTC connection timed out. Check the feed and network, or switch to Compatibility playback.')
           return
