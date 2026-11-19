@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: matchroom-api
+server:
+  port: 8080
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+matchroom:
+  media:
+    public-base-url: ${MATCHROOM_MEDIA_PUBLIC_BASE_URL:http://localhost:8888}
