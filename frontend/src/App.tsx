@@ -75,10 +75,11 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
     }
 
     async function startWebRtc() {
-      peer = new RTCPeerConnection()
-      peer.addTransceiver('video', { direction: 'recvonly' })
-      peer.addTransceiver('audio', { direction: 'recvonly' })
-      peer.ontrack = event => {
+      const connection = new RTCPeerConnection()
+      peer = connection
+      connection.addTransceiver('video', { direction: 'recvonly' })
+      connection.addTransceiver('audio', { direction: 'recvonly' })
+      connection.ontrack = event => {
         if (disposed || !video) return
         if (event.streams[0]) video.srcObject = event.streams[0]
         else {
@@ -90,8 +91,8 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
           .then(() => setSafeState('playing'))
           .catch(() => setSafeState('waiting', 'Press play to start the live feed.'))
       }
-      peer.onconnectionstatechange = () => {
-        if (peer?.connectionState === 'failed') {
+      connection.onconnectionstatechange = () => {
+        if (connection.connectionState === 'failed') {
           setSafeState('error', 'WebRTC connection failed. Try the HLS fallback or check the media server network ports.')
         }
       }
@@ -101,14 +102,14 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
         setSafeState('error', 'WebRTC connection timed out. Check the feed and network, or switch to Compatibility playback.')
       }, 15000)
 
-      const offer = await peer.createOffer()
-      await peer.setLocalDescription(offer)
-      await waitForIceGathering(peer)
+      const offer = await connection.createOffer()
+      await connection.setLocalDescription(offer)
+      await waitForIceGathering(connection)
 
       const response = await fetch(camera.whepUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/sdp', Accept: 'application/sdp' },
-        body: peer.localDescription?.sdp,
+        body: connection.localDescription?.sdp,
         signal: controller.signal,
       })
       if (!response.ok) {
@@ -120,7 +121,7 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
       const location = response.headers.get('Location')
       if (location) whepSessionUrl = new URL(location, camera.whepUrl).toString()
       const answer = await response.text()
-      await peer.setRemoteDescription({ type: 'answer', sdp: answer })
+      await connection.setRemoteDescription({ type: 'answer', sdp: answer })
     }
 
     if (mode === 'hls') {
