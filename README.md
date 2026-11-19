@@ -49,7 +49,7 @@ The local stack pins MediaMTX v1.21.4 and Spring Boot 4.1.2. The ports are bound
 Install FFmpeg on the host. In a terminal, publish a generated test pattern (not broadcast footage):
 
 ```bash
-ffmpeg -re -f lavfi -i testsrc2=size=1280x720:rate=25 -f lavfi -i sine=frequency=440:sample_rate=48000 -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p -c:a aac -rtsp_transport tcp -f rtsp rtsp://localhost:8554/cam-main
+ffmpeg -re -f lavfi -i testsrc2=size=1280x720:rate=25 -f lavfi -i sine=frequency=440:sample_rate=48000 -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p -c:a libopus -b:a 96k -rtsp_transport tcp -f rtsp rtsp://localhost:8554/cam-main
 ```
 
 Repeat in separate terminals for `cam-behind-goal` and `cam-tactical`, changing the final path. On Windows, after installing FFmpeg and Docker, you can start all three distinct test feeds together:
