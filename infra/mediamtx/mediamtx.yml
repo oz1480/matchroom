@@ -1,0 +1,26 @@
+logLevel: info
+
+rtsp: true
+rtspAddress: :8554
+rtspTransports: [tcp]
+
+hls: true
+hlsAddress: :8888
+hlsAllowOrigins: ['http://localhost:3000', 'http://127.0.0.1:3000']
+hlsVariant: lowLatency
+
+webrtc: true
+webrtcAddress: :8889
+webrtcAllowOrigins: ['http://localhost:3000', 'http://127.0.0.1:3000']
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: :8189
+webrtcIPsFromInterfaces: false
+webrtcAdditionalHosts: [127.0.0.1]
+
+paths:
+  cam-main:
+    source: publisher
+  cam-behind-goal:
+    source: publisher
+  cam-tactical:
+    source: publisher

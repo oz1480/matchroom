@@ -1,0 +1,31 @@
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:1.21.4
+    restart: unless-stopped
+    volumes:
+      - ./infra/mediamtx/mediamtx.yml:/mediamtx.yml:ro
+    ports:
+      - "127.0.0.1:8554:8554"
+      - "127.0.0.1:8888:8888"
+      - "127.0.0.1:8889:8889"
+      - "127.0.0.1:8189:8189/udp"
+      - "127.0.0.1:8189:8189/tcp"
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      MATCHROOM_MEDIA_PUBLIC_BASE_URL: http://localhost:8888
+      MATCHROOM_MEDIA_WEBRTC_BASE_URL: http://localhost:8889
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - mediamtx
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:80"
+    depends_on:
+      - api

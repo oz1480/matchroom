@@ -1,0 +1,16 @@
+backend/target/
+frontend/node_modules/
+frontend/dist/
+.local/
+*.log
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example
+
+frontend/playwright-report/
+frontend/test-results/
+frontend/blob-report/
