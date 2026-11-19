@@ -27,9 +27,24 @@ class CameraControllerTest {
     }
 
     @Test
+    void returnsCameraDetailsById() throws Exception {
+        mockMvc.perform(get("/api/cameras/behind-goal"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name", is("Behind the goal")))
+            .andExpect(jsonPath("$.whepUrl", is("http://localhost:8889/cam-behind-goal/whep")));
+    }
+
+    @Test
     void unknownCameraReturns404() throws Exception {
         mockMvc.perform(get("/api/cameras/not-real"))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.error", is("Camera not found: not-real")));
+    }
+
+    @Test
+    void actuatorHealthIsExposed() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status", is("UP")));
     }
 }
