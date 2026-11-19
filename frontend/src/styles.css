@@ -32,3 +32,5 @@
 .multi-view-tile .video-overlay strong{font-size:12px}
 .multi-view-tile .video-overlay span:last-child{max-width:90%;font-size:10px}
 @media(max-width:560px){.multi-view-grid{grid-template-columns:1fr}.multi-view-tile{padding:8px}.view-mode-tabs button{flex:1}}
+
+.video-label small{margin-left:7px;padding-left:8px;border-left:1px solid #526153;color:#c4d1c6;font:9px 'SFMono-Regular',Consolas,monospace;letter-spacing:0}
