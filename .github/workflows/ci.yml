@@ -40,27 +40,37 @@ jobs:
         run: npm run build
 
   docker-smoke:
-    name: Docker Compose and live-feed smoke test
+    name: Docker, RTSP, WebRTC, and HLS end-to-end tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - name: Install FFmpeg
         run: |
           sudo apt-get update
           sudo apt-get install --yes ffmpeg
+      - name: Install browser test dependencies
+        working-directory: frontend
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
       - name: Validate Docker Compose configuration
         run: docker compose config --quiet
       - name: Validate MediaMTX configuration
         run: docker run --rm -v "$PWD/infra/mediamtx/mediamtx.yml:/mediamtx.yml:ro" bluenviron/mediamtx:1.21.4 --validate-conf=/mediamtx.yml
       - name: Build and start the full stack
         run: docker compose up --build -d
-      - name: Verify API, web app, and real media publication
+      - name: Verify API, web app, and live camera playback
         shell: bash
         run: |
           set -euo pipefail
-          feed_pid=""
+          feed_pids=()
           cleanup() {
-            if [ -n "$feed_pid" ]; then kill "$feed_pid" 2>/dev/null || true; fi
+            for pid in "${feed_pids[@]}"; do
+              kill "$pid" 2>/dev/null || true
+            done
             docker compose logs --no-color
             docker compose down -v
           }
@@ -85,23 +95,25 @@ jobs:
           echo "$cameras" | grep -q '"hlsUrl":"http://localhost:8888/cam-main/index.m3u8"'
           echo "$cameras" | grep -q '"whepUrl":"http://localhost:8889/cam-main/whep"'
 
-          ffmpeg -hide_banner -loglevel warning -re             -f lavfi -i testsrc2=size=640x360:rate=25             -f lavfi -i sine=frequency=440:sample_rate=48000             -c:v libx264 -profile:v baseline -level 3.1 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -bf 0             -c:a libopus -b:a 96k -rtsp_transport tcp -f rtsp             rtsp://localhost:8554/cam-main >/tmp/matchroom-ffmpeg.log 2>&1 &
-          feed_pid=$!
+          for feed in "cam-main 440 0" "cam-behind-goal 550 120" "cam-tactical 660 240"; do
+            read -r path frequency hue <<< "$feed"
+            ffmpeg -hide_banner -nostdin -loglevel warning -re -f lavfi -i testsrc2=size=640x360:rate=25 -f lavfi -i "sine=frequency=$frequency:sample_rate=48000" -vf "hue=h=$hue:s=1" -c:v libx264 -profile:v baseline -level 3.1 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -bf 0 -c:a libopus -b:a 96k -rtsp_transport tcp -f rtsp "rtsp://localhost:8554/$path" >"/tmp/$path.log" 2>&1 &
+            feed_pids+=("$!")
+          done
 
           stream_ready=false
           for attempt in $(seq 1 60); do
-            if curl --fail --silent http://localhost:8888/cam-main/index.m3u8 -o /tmp/matchroom-playlist.m3u8; then
-              if grep -q '#EXTM3U' /tmp/matchroom-playlist.m3u8; then
-                stream_ready=true
-                break
-              fi
+            if curl --fail --silent http://localhost:8888/cam-main/index.m3u8 -o /tmp/matchroom-playlist.m3u8 && grep -q '#EXTM3U' /tmp/matchroom-playlist.m3u8; then
+              stream_ready=true
+              break
             fi
             sleep 2
           done
           if [ "$stream_ready" != true ]; then
             echo "MediaMTX did not produce an HLS playlist from the RTSP test publisher"
-            cat /tmp/matchroom-ffmpeg.log
+            cat /tmp/cam-main.log
             exit 1
           fi
 
-          echo "Web app, API, RTSP ingest, and HLS output are responding."
+          cd frontend
+          npm run test:e2e
