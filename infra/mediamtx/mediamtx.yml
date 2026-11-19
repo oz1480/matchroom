@@ -1,0 +1,16 @@
+logLevel: info
+rtsp: yes
+rtspAddress: :8554
+hls: yes
+hlsAddress: :8888
+hlsVariant: lowLatency
+webrtc: yes
+webrtcAddress: :8889
+webrtcLocalUDPAddress: :8189
+paths:
+  cam-main:
+    source: publisher
+  cam-behind-goal:
+    source: publisher
+  cam-tactical:
+    source: publisher
