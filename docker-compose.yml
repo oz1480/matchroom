@@ -1,6 +1,6 @@
 services:
   mediamtx:
-    image: bluenviron/mediamtx:1.15.3
+    image: bluenviron/mediamtx:1.21.4
     restart: unless-stopped
     volumes:
       - ./infra/mediamtx/mediamtx.yml:/mediamtx.yml:ro
