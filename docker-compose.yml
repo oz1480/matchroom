@@ -5,10 +5,10 @@ services:
     volumes:
       - ./infra/mediamtx/mediamtx.yml:/mediamtx.yml:ro
     ports:
-      - "8554:8554"
-      - "8888:8888"
-      - "8889:8889"
-      - "8189:8189/udp"
+      - "127.0.0.1:8554:8554"
+      - "127.0.0.1:8888:8888"
+      - "127.0.0.1:8889:8889"
+      - "127.0.0.1:8189:8189/udp"
 
   api:
     build: ./backend
@@ -16,7 +16,7 @@ services:
     environment:
       MATCHROOM_MEDIA_PUBLIC_BASE_URL: http://localhost:8888
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       - mediamtx
 
@@ -24,6 +24,6 @@ services:
     build: ./frontend
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "127.0.0.1:3000:80"
     depends_on:
       - api
