@@ -28,7 +28,7 @@ try {
             '-vf', "hue=h=$($feed.Hue):s=1",
             '-c:v', 'libx264', '-profile:v', 'baseline', '-level', '3.1', '-preset', 'veryfast', '-tune', 'zerolatency',
             '-pix_fmt', 'yuv420p', '-g', '50', '-keyint_min', '50', '-bf', '0',
-            '-c:a', 'aac', '-b:a', '96k', '-ar', '48000',
+            '-c:a', 'libopus', '-b:a', '96k', '-ar', '48000',
             '-rtsp_transport', 'tcp', '-f', 'rtsp',
             "rtsp://localhost:8554/$($feed.Path)"
         )
