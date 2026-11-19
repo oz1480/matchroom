@@ -9,7 +9,7 @@ if (-not (Test-Path $pidFile)) {
 $processes = Get-Content $pidFile -Raw | ConvertFrom-Json
 foreach ($item in $processes) {
     $process = Get-Process -Id ([int]$item.ProcessId) -ErrorAction SilentlyContinue
-    if ($process) {
+    if ($process -and $process.ProcessName -eq 'ffmpeg') {
         Stop-Process -Id $process.Id -Force
         Write-Host "Stopped $($item.Label) (PID $($item.ProcessId))"
     }
