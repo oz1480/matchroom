@@ -270,7 +270,7 @@ export default function App() {
               </article>)}
             </div>
           : <div className="message-panel"><strong>No cameras configured</strong></div>}
-        <div className="player-footer"><span>{viewingMode === 'multiview' ? 'MULTI-VIEW / INDEPENDENT FEEDS' : mode === 'webrtc' ? 'WEBRTC / WHEP' : 'HLS / HLS.JS'}</span><span>EARLY ACCESS BUILD <b>0.3</b></span></div>
+        <div className="player-footer"><span>{viewingMode === 'multiview' ? 'MULTI-VIEW / INDEPENDENT FEEDS' : mode === 'webrtc' ? 'WEBRTC / WHEP' : 'HLS / HLS.JS'}</span><span>CAMERA ENGINE MVP <b>0.4</b></span></div>
       </div>
 
       <aside className="camera-panel">
