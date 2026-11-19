@@ -24,7 +24,7 @@ Authorized camera sources -- RTSP/TCP --> MediaMTX
 Spring Boot API :8080 --------------------+--> camera catalogue
 ```
 
-Video ingestion, transcoding, and computer vision are deliberately kept outside Spring Boot.
+The current WHEP receiver negotiates video only. Immersive/ambient audio is intentionally deferred to a separate media pipeline. Video ingestion, transcoding, and computer vision are deliberately kept outside Spring Boot.
 
 > **Rights and access:** only ingest and distribute feeds you are authorized to use. Stadium/broadcast camera access requires an agreement with a club, production provider, or broadcaster. This repository does not provide access to protected broadcasts.
 
