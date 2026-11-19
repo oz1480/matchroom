@@ -4,6 +4,7 @@ import { getCameras } from './api'
 import type { Camera } from './types'
 
 type PlaybackMode = 'webrtc' | 'hls'
+type ViewingMode = 'director' | 'multiview'
 type PlaybackState = 'connecting' | 'playing' | 'waiting' | 'error'
 
 function waitForIceGathering(peer: RTCPeerConnection, timeoutMs = 4000): Promise<void> {
@@ -169,6 +170,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [mode, setMode] = useState<PlaybackMode>('webrtc')
+  const [viewingMode, setViewingMode] = useState<ViewingMode>('director')
   const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
@@ -204,6 +206,10 @@ export default function App() {
           <div><span className="eyebrow">NOW WATCHING</span><h2>{selected?.name ?? 'Camera room'}</h2></div>
           <span className="mode-pill">DIRECTOR MODE <span>●</span></span>
         </div>
+        <div className="view-mode-tabs" aria-label="Viewing layout">
+          <button className={viewingMode === 'director' ? 'active' : ''} onClick={() => setViewingMode('director')} aria-pressed={viewingMode === 'director'}>DIRECTOR VIEW</button>
+          <button className={viewingMode === 'multiview' ? 'active' : ''} onClick={() => setViewingMode('multiview')} aria-pressed={viewingMode === 'multiview'}>MULTI-VIEW</button>
+        </div>
         <div className="playback-toolbar" aria-label="Playback protocol">
           <div className="playback-tabs">
             <button className={mode === 'webrtc' ? 'active' : ''} onClick={() => setMode('webrtc')} aria-pressed={mode === 'webrtc'}>LOW LATENCY</button>
@@ -213,9 +219,15 @@ export default function App() {
         </div>
         {error ? <div className="message-panel" role="alert"><strong>Camera service unavailable</strong><span>{error}</span><button onClick={() => window.location.reload()}>Retry service</button></div>
           : loading ? <div className="message-panel"><strong>Loading camera room…</strong></div>
-          : selected ? <CameraPlayer key={selected.id} camera={selected} mode={mode} retryKey={retryKey} />
+          : viewingMode === 'director' && selected ? <CameraPlayer key={selected.id} camera={selected} mode={mode} retryKey={retryKey} />
+          : viewingMode === 'multiview' && cameras.length > 0 ? <div className="multi-view-grid">
+              {cameras.map((camera, index) => <article className={`multi-view-tile ${selectedId === camera.id ? 'featured' : ''}`} key={camera.id}>
+                <div className="multi-view-heading"><span>ANGLE 0{index + 1}</span><strong>{camera.name}</strong></div>
+                <CameraPlayer camera={camera} mode={mode} retryKey={retryKey} />
+              </article>)}
+            </div>
           : <div className="message-panel"><strong>No cameras configured</strong></div>}
-        <div className="player-footer"><span>{mode === 'webrtc' ? 'WEBRTC / WHEP' : 'HLS / HLS.JS'}</span><span>EARLY ACCESS BUILD <b>0.2</b></span></div>
+        <div className="player-footer"><span>{viewingMode === 'multiview' ? 'MULTI-VIEW / INDEPENDENT FEEDS' : mode === 'webrtc' ? 'WEBRTC / WHEP' : 'HLS / HLS.JS'}</span><span>EARLY ACCESS BUILD <b>0.3</b></span></div>
       </div>
 
       <aside className="camera-panel">
@@ -226,7 +238,7 @@ export default function App() {
           </button>)}
           {!loading && cameras.length === 0 && <p className="empty-note">Camera feeds will appear here when configured.</p>}
         </div>
-        <div className="director-note"><span className="note-icon">✳</span><div><strong>You’re the director</strong><p>Choose an angle to switch the live view. If a live connection cannot be established, switch to Compatibility playback.</p></div></div>
+        <div className="director-note"><span className="note-icon">✳</span><div><strong>You’re the director</strong><p>Choose an angle to switch the live view, or open Multi-View to see every configured feed. Multi-View streams are not yet time-synchronized.</p></div></div>
       </aside>
     </section>
     <footer className="page-footer"><span>MATCHROOM ENGINEERING PREVIEW</span><span>BUILT FOR THE FANS. DESIGNED FOR THE GAME.</span></footer>
