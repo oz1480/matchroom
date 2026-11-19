@@ -20,7 +20,7 @@ $processes = foreach ($feed in $feeds) {
         '-f', 'lavfi', '-i', 'testsrc2=size=1280x720:rate=25',
         '-f', 'lavfi', '-i', "sine=frequency=$($feed.Frequency):sample_rate=48000",
         '-vf', "hue=h=$($feed.Hue):s=1",
-        '-c:v', 'libx264', '-preset', 'veryfast', '-tune', 'zerolatency',
+        '-c:v', 'libx264', '-profile:v', 'baseline', '-level', '3.1', '-preset', 'veryfast', '-tune', 'zerolatency',
         '-pix_fmt', 'yuv420p', '-g', '50', '-keyint_min', '50', '-bf', '0',
         '-c:a', 'aac', '-b:a', '96k', '-ar', '48000',
         '-rtsp_transport', 'tcp', '-f', 'rtsp',
