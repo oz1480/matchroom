@@ -5,13 +5,13 @@ Matchroom is an interactive football viewing platform. This repository begins wi
 ## Architecture
 
 ```text
-Authorized camera sources -- RTSP --> MediaMTX
-                                      |-- HLS :8888 --> React player
-                                      |-- WebRTC :8889 (next playback milestone)
-Spring Boot API :8080 ----------------+--> camera catalogue
+Authorized camera sources -- RTSP/TCP --> MediaMTX
+                                          |-- HLS :8888 --> React player
+                                          |-- WebRTC :8889 (next playback milestone)
+Spring Boot API :8080 --------------------+--> camera catalogue
 ```
 
-The first browser playback path uses HLS for compatibility. Video processing does not run inside Spring Boot.
+The first browser playback path uses HLS for compatibility. Video processing does not run inside Spring Boot. MediaMTX is pinned to v1.21.4.
 
 > **Rights and access:** only ingest and distribute feeds you are authorized to use. Stadium/broadcast camera access requires an agreement with a club, production provider, or broadcaster. This scaffold does not provide access to protected broadcasts.
 
@@ -35,7 +35,7 @@ The camera list is available before publishers connect. The player will show a w
 With FFmpeg installed, publish a generated test pattern (not broadcast footage):
 
 ```bash
-ffmpeg -re -f lavfi -i testsrc2=size=1280x720:rate=25 -f lavfi -i sine=frequency=440:sample_rate=48000 -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p -c:a aac -f rtsp rtsp://localhost:8554/cam-main
+ffmpeg -re -f lavfi -i testsrc2=size=1280x720:rate=25 -f lavfi -i sine=frequency=440:sample_rate=48000 -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p -c:a aac -rtsp_transport tcp -f rtsp rtsp://localhost:8554/cam-main
 ```
 
 Repeat for `cam-behind-goal` and `cam-tactical`. HLS URLs:
