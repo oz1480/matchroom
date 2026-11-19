@@ -50,7 +50,19 @@ Install FFmpeg on the host. In a terminal, publish a generated test pattern (not
 ffmpeg -re -f lavfi -i testsrc2=size=1280x720:rate=25 -f lavfi -i sine=frequency=440:sample_rate=48000 -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p -c:a aac -rtsp_transport tcp -f rtsp rtsp://localhost:8554/cam-main
 ```
 
-Repeat in separate terminals for `cam-behind-goal` and `cam-tactical`, changing the final path. The browser defaults to WebRTC; choose **Compatibility** if your network cannot establish the WebRTC connection.
+Repeat in separate terminals for `cam-behind-goal` and `cam-tactical`, changing the final path. On Windows, after installing FFmpeg and Docker, you can start all three distinct test feeds together:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\\scripts\\start-test-feeds.ps1
+```
+
+Stop them with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\\scripts\\stop-test-feeds.ps1
+```
+
+The script creates three visibly different generated test patterns and writes logs under `.local/test-feeds`. The browser defaults to WebRTC; choose **Compatibility** if your network cannot establish the WebRTC connection.
 
 HLS URLs:
 
