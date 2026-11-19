@@ -278,7 +278,7 @@ export default function App() {
         <div className="camera-list">
           {cameras.map((camera, index) => {
             const status = feedStatus[camera.id]
-            const statusLabel = status === 'playing' ? 'ONLINE' : status === 'connecting' ? 'CONNECTING' : status === 'waiting' ? 'WAITING' : status === 'error' ? 'OFFLINE' : 'NOT OPEN'
+            const statusLabel = status === 'playing' ? 'ONLINE' : status === 'connecting' ? 'CONNECTING' : status === 'waiting' ? 'WAITING' : status === 'error' ? 'ERROR' : 'NOT OPEN'
             return <button className={`camera-option ${selectedId === camera.id ? 'selected' : ''}`} key={camera.id} onClick={() => setSelectedId(camera.id)} aria-pressed={selectedId === camera.id}>
               <span className="camera-index">0{index + 1}</span>
               <span className="camera-copy"><strong>{camera.name}</strong><small>{camera.description}</small><span className={`camera-status ${status ?? 'idle'}`}><i />{statusLabel}</span></span>
