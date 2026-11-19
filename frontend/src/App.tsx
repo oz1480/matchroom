@@ -204,7 +204,7 @@ export default function App() {
       <div className="player-column">
         <div className="section-heading">
           <div><span className="eyebrow">NOW WATCHING</span><h2>{selected?.name ?? 'Camera room'}</h2></div>
-          <span className="mode-pill">DIRECTOR MODE <span>●</span></span>
+          <span className="mode-pill">{viewingMode === 'director' ? 'DIRECTOR MODE' : 'MULTI-VIEW'} <span>●</span></span>
         </div>
         <div className="view-mode-tabs" aria-label="Viewing layout">
           <button className={viewingMode === 'director' ? 'active' : ''} onClick={() => setViewingMode('director')} aria-pressed={viewingMode === 'director'}>DIRECTOR VIEW</button>
