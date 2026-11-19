@@ -6,11 +6,14 @@ rtspTransports: [tcp]
 
 hls: true
 hlsAddress: :8888
+hlsAllowOrigins: ['http://localhost:3000', 'http://127.0.0.1:3000']
 hlsVariant: lowLatency
 
 webrtc: true
 webrtcAddress: :8889
+webrtcAllowOrigins: ['http://localhost:3000', 'http://127.0.0.1:3000']
 webrtcLocalUDPAddress: :8189
+webrtcAdditionalHosts: [localhost, 127.0.0.1]
 
 paths:
   cam-main:
