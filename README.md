@@ -118,6 +118,10 @@ npm run test:e2e
 
 GitHub Actions runs backend tests, the frontend production build, MediaMTX configuration validation, and a Docker-based browser test that publishes generated RTSP feeds and verifies WebRTC Director View, three-feed Multi-View, and HLS playback.
 
+## Release readiness
+
+The production launch gates are tracked in [docs/LAUNCH_READINESS.md](docs/LAUNCH_READINESS.md). This checklist deliberately distinguishes a local engineering preview from a private pilot and a public launch. A green CI run alone does not establish production readiness.
+
 ## Roadmap
 
 1. **Camera engine hardening:** feed health, reconnect/backoff, measured end-to-end latency, and synchronized multi-camera clocks.
