@@ -12,6 +12,7 @@ test('Director View receives real WebRTC video frames', async ({ page }) => {
   ).toBeGreaterThan(0)
 
   await expect(page.locator('.video-label')).toContainText('LOW-LATENCY WEBRTC')
+  await expect(page.locator('.camera-status.playing')).toHaveCount(1)
 })
 
 test('Multi-View receives all three independent camera feeds', async ({ page }) => {
@@ -27,6 +28,7 @@ test('Multi-View receives all three independent camera feeds', async ({ page }) 
     ),
     { timeout: 35_000, message: 'All three Multi-View tiles should decode video' },
   ).toBe(3)
+  await expect(page.locator('.camera-status.playing')).toHaveCount(3)
 })
 
 test('Compatibility mode plays the HLS fallback', async ({ page }) => {
@@ -40,4 +42,5 @@ test('Compatibility mode plays the HLS fallback', async ({ page }) => {
   ).toBeGreaterThan(0)
 
   await expect(page.locator('.video-label')).toContainText('HLS PLAYBACK')
+  await expect(page.locator('.camera-status.playing')).toHaveCount(1)
 })
