@@ -10,3 +10,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+frontend/playwright-report/
+frontend/test-results/
+frontend/blob-report/
