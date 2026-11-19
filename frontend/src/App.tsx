@@ -5,7 +5,7 @@ import type { Camera } from './types'
 
 type PlaybackMode = 'webrtc' | 'hls'
 type ViewingMode = 'director' | 'multiview'
-type PlaybackState = 'connecting' | 'playing' | 'waiting' | 'error'
+type PlaybackState = 'idle' | 'connecting' | 'playing' | 'waiting' | 'error'
 
 function waitForIceGathering(peer: RTCPeerConnection, timeoutMs = 4000): Promise<void> {
   if (peer.iceGatheringState === 'complete') return Promise.resolve()
@@ -175,6 +175,7 @@ function CameraPlayer({ camera, mode, retryKey, onStatusChange }: { camera: Came
 
     return () => {
       disposed = true
+      onStatusChange(camera.id, 'idle')
       if (handshakeTimeout !== undefined) window.clearTimeout(handshakeTimeout)
       if (statsInterval !== undefined) window.clearInterval(statsInterval)
       controller.abort()
