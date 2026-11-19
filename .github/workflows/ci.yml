@@ -39,3 +39,34 @@ jobs:
       - name: Build
         working-directory: frontend
         run: npm run build
+
+  docker-smoke:
+    name: Docker Compose smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start the full stack
+        run: docker compose up --build -d
+      - name: Verify application endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          trap 'docker compose logs --no-color; docker compose down -v' EXIT
+          ready=false
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://localhost:8080/actuator/health >/dev/null; then
+              ready=true
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" != true ]; then
+            echo "Backend did not become healthy in 120 seconds"
+            exit 1
+          fi
+          curl --fail --silent http://localhost:3000/ | grep -q "Matchroom"
+          cameras="$(curl --fail --silent http://localhost:8080/api/cameras)"
+          echo "$cameras" | grep -q '"id":"main"'
+          echo "$cameras" | grep -q '"hlsUrl":"http://localhost:8888/cam-main/index.m3u8"'
+          echo "$cameras" | grep -q '"whepUrl":"http://localhost:8889/cam-main/whep"'
+          echo "Web app and camera catalogue are responding."
