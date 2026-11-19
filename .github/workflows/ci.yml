@@ -81,7 +81,7 @@ jobs:
           echo "$cameras" | grep -q '"hlsUrl":"http://localhost:8888/cam-main/index.m3u8"'
           echo "$cameras" | grep -q '"whepUrl":"http://localhost:8889/cam-main/whep"'
 
-          ffmpeg -hide_banner -loglevel warning -re             -f lavfi -i testsrc2=size=640x360:rate=25             -f lavfi -i sine=frequency=440:sample_rate=48000             -c:v libx264 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -bf 0             -c:a aac -rtsp_transport tcp -f rtsp             rtsp://localhost:8554/cam-main >/tmp/matchroom-ffmpeg.log 2>&1 &
+          ffmpeg -hide_banner -loglevel warning -re             -f lavfi -i testsrc2=size=640x360:rate=25             -f lavfi -i sine=frequency=440:sample_rate=48000             -c:v libx264 -profile:v baseline -level 3.1 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -bf 0             -c:a aac -rtsp_transport tcp -f rtsp             rtsp://localhost:8554/cam-main >/tmp/matchroom-ffmpeg.log 2>&1 &
           feed_pid=$!
 
           stream_ready=false
