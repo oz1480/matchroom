@@ -42,7 +42,7 @@ docker compose up --build
 - MediaMTX HLS: http://localhost:8888
 - MediaMTX WebRTC/WHEP: http://localhost:8889
 
-The local stack pins MediaMTX v1.21.3 and Spring Boot 4.1.2. The ports are bound to localhost for local development. Do not expose this configuration directly to the public internet.
+The local stack pins MediaMTX v1.21.4 and Spring Boot 4.1.2. The ports are bound to localhost for local development. Do not expose this configuration directly to the public internet.
 
 ## Publish a generated test feed
 
