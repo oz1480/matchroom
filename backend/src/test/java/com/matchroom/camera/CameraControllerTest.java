@@ -17,12 +17,13 @@ class CameraControllerTest {
     @Autowired MockMvc mockMvc;
 
     @Test
-    void listsThreeConfiguredCameras() throws Exception {
+    void listsThreeConfiguredCamerasWithBothPlaybackProtocols() throws Exception {
         mockMvc.perform(get("/api/cameras"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$", hasSize(3)))
             .andExpect(jsonPath("$[0].id", is("main")))
-            .andExpect(jsonPath("$[0].streamUrl", is("http://localhost:8888/cam-main/index.m3u8")));
+            .andExpect(jsonPath("$[0].hlsUrl", is("http://localhost:8888/cam-main/index.m3u8")))
+            .andExpect(jsonPath("$[0].whepUrl", is("http://localhost:8889/cam-main/whep")));
     }
 
     @Test
