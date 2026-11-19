@@ -1,12 +1,17 @@
 logLevel: info
-rtsp: yes
+
+rtsp: true
 rtspAddress: :8554
-hls: yes
+rtspTransports: [tcp]
+
+hls: true
 hlsAddress: :8888
 hlsVariant: lowLatency
-webrtc: yes
+
+webrtc: true
 webrtcAddress: :8889
 webrtcLocalUDPAddress: :8189
+
 paths:
   cam-main:
     source: publisher
