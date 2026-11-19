@@ -48,6 +48,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes ffmpeg
+      - name: Validate Docker Compose configuration
+        run: docker compose config --quiet
+      - name: Validate MediaMTX configuration
+        run: docker run --rm -v "$PWD/infra/mediamtx/mediamtx.yml:/mediamtx.yml:ro" bluenviron/mediamtx:1.21.4 --validate-conf=/mediamtx.yml
       - name: Build and start the full stack
         run: docker compose up --build -d
       - name: Verify API, web app, and real media publication
