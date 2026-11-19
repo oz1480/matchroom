@@ -106,7 +106,7 @@ cd backend && mvn --batch-mode verify
 cd frontend && npm install && npm run build
 ```
 
-GitHub Actions runs backend tests and the frontend production build on pushes and pull requests.
+GitHub Actions runs backend tests, the frontend production build, MediaMTX configuration validation, and a Docker-based browser test that publishes generated RTSP feeds and verifies WebRTC Director View, three-feed Multi-View, and HLS playback.
 
 ## Roadmap
 
