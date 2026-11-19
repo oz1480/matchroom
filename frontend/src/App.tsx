@@ -27,6 +27,7 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
   const videoRef = useRef<HTMLVideoElement>(null)
   const [state, setState] = useState<PlaybackState>('connecting')
   const [detail, setDetail] = useState('')
+  const [telemetry, setTelemetry] = useState('')
 
   useEffect(() => {
     const video = videoRef.current
@@ -36,6 +37,7 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
     let hls: Hls | undefined
     let peer: RTCPeerConnection | undefined
     let whepSessionUrl: string | undefined
+    let statsInterval: number | undefined
     const controller = new AbortController()
     let handshakeTimeout: number | undefined
 
@@ -48,6 +50,7 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
 
     setState('connecting')
     setDetail('')
+    setTelemetry('')
     video.srcObject = null
     video.removeAttribute('src')
     video.load()
@@ -98,6 +101,38 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
         }
       }
 
+      const collectStats = async () => {
+        try {
+          const report = await connection.getStats()
+          let roundTripMs: number | undefined
+          let resolution = ''
+          let framesPerSecond: number | undefined
+          report.forEach(stat => {
+            const values = stat as unknown as Record<string, unknown>
+            if (values.type === 'candidate-pair' && values.state === 'succeeded' && values.nominated === true
+              && typeof values.currentRoundTripTime === 'number') {
+              roundTripMs = Math.round(values.currentRoundTripTime * 1000)
+            }
+            if (values.type === 'inbound-rtp' && values.kind === 'video') {
+              if (typeof values.frameWidth === 'number' && typeof values.frameHeight === 'number') {
+                resolution = `${values.frameWidth}×${values.frameHeight}`
+              }
+              if (typeof values.framesPerSecond === 'number') framesPerSecond = Math.round(values.framesPerSecond)
+            }
+          })
+          const parts = [
+            resolution,
+            framesPerSecond === undefined ? '' : `${framesPerSecond} FPS`,
+            roundTripMs === undefined ? '' : `RTT ${roundTripMs} ms`,
+          ].filter(Boolean)
+          if (!disposed) setTelemetry(parts.join(' · '))
+        } catch {
+          // Stats are best-effort and must never interrupt playback.
+        }
+      }
+      statsInterval = window.setInterval(() => { void collectStats() }, 2000)
+      void collectStats()
+
       handshakeTimeout = window.setTimeout(() => {
         controller.abort()
         setSafeState('error', 'WebRTC connection timed out. Check the feed and network, or switch to Compatibility playback.')
@@ -140,6 +175,7 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
     return () => {
       disposed = true
       if (handshakeTimeout !== undefined) window.clearTimeout(handshakeTimeout)
+      if (statsInterval !== undefined) window.clearInterval(statsInterval)
       controller.abort()
       hls?.destroy()
       peer?.close()
@@ -160,7 +196,7 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
       <strong>{state === 'connecting' ? 'Connecting to camera' : state === 'waiting' ? 'Waiting for playback' : state === 'error' ? 'Feed unavailable' : 'Waiting for feed'}</strong>
       <span>{detail || (state === 'connecting' ? 'Negotiating a live connection with the media server' : 'Publish a source to this camera path to start playback')}</span>
     </div>}
-    <div className="video-label"><span className="live-dot" /> {mode === 'webrtc' ? 'LOW-LATENCY WEBRTC' : 'HLS PLAYBACK'}</div>
+    <div className="video-label"><span className="live-dot" /> {mode === 'webrtc' ? 'LOW-LATENCY WEBRTC' : 'HLS PLAYBACK'}{telemetry && <small>{telemetry}</small>}</div>
   </div>
 }
 
