@@ -34,3 +34,15 @@
 @media(max-width:560px){.multi-view-grid{grid-template-columns:1fr}.multi-view-tile{padding:8px}.view-mode-tabs button{flex:1}}
 
 .video-label small{margin-left:7px;padding-left:8px;border-left:1px solid #526153;color:#c4d1c6;font:9px 'SFMono-Regular',Consolas,monospace;letter-spacing:0}
+
+.camera-status{display:inline-flex;align-items:center;gap:6px;margin-top:5px;color:#748078;font:8px 'SFMono-Regular',Consolas,monospace;letter-spacing:.1em}
+.camera-status i{width:5px;height:5px;border-radius:50%;background:#65736a}
+.camera-status.playing{color:#c4fa5b}
+.camera-status.playing i{background:#c4fa5b;box-shadow:0 0 8px #c4fa5b88}
+.camera-status.connecting{color:#d7c47a}
+.camera-status.connecting i{background:#d7c47a;animation:status-pulse 1.2s ease-in-out infinite}
+.camera-status.waiting{color:#b3a1d9}
+.camera-status.waiting i{background:#b3a1d9}
+.camera-status.error{color:#e18a8a}
+.camera-status.error i{background:#e18a8a}
+@keyframes status-pulse{50%{opacity:.35}}
