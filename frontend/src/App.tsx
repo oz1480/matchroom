@@ -36,6 +36,7 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
     let peer: RTCPeerConnection | undefined
     let whepSessionUrl: string | undefined
     const controller = new AbortController()
+    let handshakeTimeout: number | undefined
 
     const setSafeState = (next: PlaybackState, message = '') => {
       if (!disposed) {
@@ -95,6 +96,11 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
         }
       }
 
+      handshakeTimeout = window.setTimeout(() => {
+        controller.abort()
+        setSafeState('error', 'WebRTC connection timed out. Check the feed and network, or switch to Compatibility playback.')
+      }, 15000)
+
       const offer = await peer.createOffer()
       await peer.setLocalDescription(offer)
       await waitForIceGathering(peer)
@@ -109,6 +115,7 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
         const reason = await response.text().catch(() => '')
         throw new Error(`WHEP server returned ${response.status}${reason ? `: ${reason.slice(0, 140)}` : ''}`)
       }
+      if (handshakeTimeout !== undefined) window.clearTimeout(handshakeTimeout)
 
       const location = response.headers.get('Location')
       if (location) whepSessionUrl = new URL(location, camera.whepUrl).toString()
@@ -120,13 +127,17 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
       void startHls()
     } else {
       void startWebRtc().catch(cause => {
-        if (cause instanceof Error && cause.name === 'AbortError') return
+        if (cause instanceof Error && cause.name === 'AbortError') {
+          setSafeState('error', 'WebRTC connection timed out. Check the feed and network, or switch to Compatibility playback.')
+          return
+        }
         setSafeState('error', cause instanceof Error ? cause.message : 'Unable to establish WebRTC playback.')
       })
     }
 
     return () => {
       disposed = true
+      if (handshakeTimeout !== undefined) window.clearTimeout(handshakeTimeout)
       controller.abort()
       hls?.destroy()
       peer?.close()
