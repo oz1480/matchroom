@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Hls from 'hls.js'
 import { getCameras } from './api'
 import type { Camera } from './types'
@@ -23,7 +23,7 @@ function waitForIceGathering(peer: RTCPeerConnection, timeoutMs = 4000): Promise
   })
 }
 
-function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: PlaybackMode; retryKey: number }) {
+function CameraPlayer({ camera, mode, retryKey, onStatusChange }: { camera: Camera; mode: PlaybackMode; retryKey: number; onStatusChange: (cameraId: string, state: PlaybackState) => void }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [state, setState] = useState<PlaybackState>('connecting')
   const [detail, setDetail] = useState('')
@@ -45,11 +45,13 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
       if (!disposed) {
         setState(next)
         setDetail(message)
+        onStatusChange(camera.id, next)
       }
     }
 
     setState('connecting')
     setDetail('')
+    onStatusChange(camera.id, 'connecting')
     setTelemetry('')
     video.srcObject = null
     video.removeAttribute('src')
@@ -186,7 +188,7 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
       video.removeAttribute('src')
       video.load()
     }
-  }, [camera.id, camera.hlsUrl, camera.whepUrl, mode, retryKey])
+  }, [camera.id, camera.hlsUrl, camera.whepUrl, mode, retryKey, onStatusChange])
 
   return <div className="video-shell">
     <video ref={videoRef} className="match-video" controls playsInline autoPlay muted aria-label={`${camera.name} live feed`} />
@@ -207,6 +209,11 @@ export default function App() {
   const [mode, setMode] = useState<PlaybackMode>('webrtc')
   const [viewingMode, setViewingMode] = useState<ViewingMode>('director')
   const [retryKey, setRetryKey] = useState(0)
+  const [feedStatus, setFeedStatus] = useState<Record<string, PlaybackState>>({})
+
+  const handleFeedStatus = useCallback((cameraId: string, status: PlaybackState) => {
+    setFeedStatus(current => current[cameraId] === status ? current : { ...current, [cameraId]: status })
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -254,11 +261,11 @@ export default function App() {
         </div>
         {error ? <div className="message-panel" role="alert"><strong>Camera service unavailable</strong><span>{error}</span><button onClick={() => window.location.reload()}>Retry service</button></div>
           : loading ? <div className="message-panel"><strong>Loading camera room…</strong></div>
-          : viewingMode === 'director' && selected ? <CameraPlayer key={selected.id} camera={selected} mode={mode} retryKey={retryKey} />
+          : viewingMode === 'director' && selected ? <CameraPlayer key={selected.id} camera={selected} mode={mode} retryKey={retryKey} onStatusChange={handleFeedStatus} />
           : viewingMode === 'multiview' && cameras.length > 0 ? <div className="multi-view-grid">
               {cameras.map((camera, index) => <article className={`multi-view-tile ${selectedId === camera.id ? 'featured' : ''}`} key={camera.id}>
                 <div className="multi-view-heading"><span>ANGLE 0{index + 1}</span><strong>{camera.name}</strong></div>
-                <CameraPlayer camera={camera} mode={mode} retryKey={retryKey} />
+                <CameraPlayer camera={camera} mode={mode} retryKey={retryKey} onStatusChange={handleFeedStatus} />
               </article>)}
             </div>
           : <div className="message-panel"><strong>No cameras configured</strong></div>}
@@ -268,9 +275,15 @@ export default function App() {
       <aside className="camera-panel">
         <div className="panel-heading"><div><span className="eyebrow">CHOOSE YOUR VIEW</span><h2>Camera angles</h2></div><span className="camera-count">{cameras.length.toString().padStart(2, '0')}</span></div>
         <div className="camera-list">
-          {cameras.map((camera, index) => <button className={`camera-option ${selectedId === camera.id ? 'selected' : ''}`} key={camera.id} onClick={() => setSelectedId(camera.id)} aria-pressed={selectedId === camera.id}>
-            <span className="camera-index">0{index + 1}</span><span className="camera-copy"><strong>{camera.name}</strong><small>{camera.description}</small></span><span className="select-indicator" aria-hidden="true">↗</span>
-          </button>)}
+          {cameras.map((camera, index) => {
+            const status = feedStatus[camera.id]
+            const statusLabel = status === 'playing' ? 'ONLINE' : status === 'connecting' ? 'CONNECTING' : status === 'waiting' ? 'WAITING' : status === 'error' ? 'OFFLINE' : 'NOT OPEN'
+            return <button className={`camera-option ${selectedId === camera.id ? 'selected' : ''}`} key={camera.id} onClick={() => setSelectedId(camera.id)} aria-pressed={selectedId === camera.id}>
+              <span className="camera-index">0{index + 1}</span>
+              <span className="camera-copy"><strong>{camera.name}</strong><small>{camera.description}</small><span className={`camera-status ${status ?? 'idle'}`}><i />{statusLabel}</span></span>
+              <span className="select-indicator" aria-hidden="true">↗</span>
+            </button>
+          })}
           {!loading && cameras.length === 0 && <p className="empty-note">Camera feeds will appear here when configured.</p>}
         </div>
         <div className="director-note"><span className="note-icon">✳</span><div><strong>You’re the director</strong><p>Choose an angle to switch the live view, or open Multi-View to see every configured feed. Multi-View streams are not yet time-synchronized.</p></div></div>
