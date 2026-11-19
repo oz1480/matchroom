@@ -8,14 +8,25 @@ import java.util.List;
 public class CameraService {
     private final List<Camera> cameras;
 
-    public CameraService(@Value("${matchroom.media.public-base-url:http://localhost:8888}") String mediaBaseUrl) {
-        String base = mediaBaseUrl == null || mediaBaseUrl.isBlank()
-                ? "http://localhost:8888" : mediaBaseUrl.replaceAll("/+$", "");
+    public CameraService(
+        @Value("${matchroom.media.public-base-url:http://localhost:8888}") String hlsBaseUrl,
+        @Value("${matchroom.media.webrtc-base-url:http://localhost:8889}") String webrtcBaseUrl
+    ) {
+        String hls = normalizeBase(hlsBaseUrl, "http://localhost:8888");
+        String webrtc = normalizeBase(webrtcBaseUrl, "http://localhost:8889");
         cameras = List.of(
-            new Camera("main", "Main camera", "Primary wide match view", base + "/cam-main/index.m3u8", 1),
-            new Camera("behind-goal", "Behind the goal", "Goal-line perspective", base + "/cam-behind-goal/index.m3u8", 2),
-            new Camera("tactical", "Tactical camera", "Elevated tactical perspective", base + "/cam-tactical/index.m3u8", 3)
+            camera("main", "Main camera", "Primary wide match view", "cam-main", 1, hls, webrtc),
+            camera("behind-goal", "Behind the goal", "Goal-line perspective", "cam-behind-goal", 2, hls, webrtc),
+            camera("tactical", "Tactical camera", "Elevated tactical perspective", "cam-tactical", 3, hls, webrtc)
         );
+    }
+
+    private Camera camera(String id, String name, String description, String path, int order, String hls, String webrtc) {
+        return new Camera(id, name, description, hls + "/" + path + "/index.m3u8", webrtc + "/" + path + "/whep", order);
+    }
+
+    private static String normalizeBase(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value.replaceAll("/+$", "");
     }
 
     public List<Camera> findAll() { return cameras; }
