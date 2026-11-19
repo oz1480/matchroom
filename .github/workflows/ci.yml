@@ -97,7 +97,7 @@ jobs:
 
           for feed in "cam-main 440 0" "cam-behind-goal 550 120" "cam-tactical 660 240"; do
             read -r path frequency hue <<< "$feed"
-            ffmpeg -hide_banner -nostdin -loglevel warning -re -f lavfi -i testsrc2=size=640x360:rate=25 -f lavfi -i "sine=frequency=$frequency:sample_rate=48000" -vf "hue=h=$hue:s=1" -c:v libx264 -profile:v baseline -level 3.1 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -bf 0 -c:a libopus -b:a 96k -rtsp_transport tcp -f rtsp "rtsp://localhost:8554/$path" >"/tmp/$path.log" 2>&1 &
+            ffmpeg -hide_banner -nostdin -loglevel warning -re -f lavfi -i testsrc2=size=640x360:rate=25 -f lavfi -i "sine=frequency=$frequency:sample_rate=48000" -vf "hue=h=$hue:s=1" -c:v libx264 -profile:v baseline -level 3.1 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -bf 0 -c:a aac -b:a 96k -rtsp_transport tcp -f rtsp "rtsp://localhost:8554/$path" >"/tmp/$path.log" 2>&1 &
             feed_pids+=("$!")
           done
 
