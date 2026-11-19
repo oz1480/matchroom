@@ -101,9 +101,19 @@ npm run dev
 
 ## Quality checks
 
+Backend and frontend production build:
+
 ```bash
 cd backend && mvn --batch-mode verify
 cd frontend && npm install && npm run build
+```
+
+Browser end-to-end tests require the Docker stack and three active test publishers:
+
+```bash
+cd frontend
+npx playwright install chromium
+npm run test:e2e
 ```
 
 GitHub Actions runs backend tests, the frontend production build, MediaMTX configuration validation, and a Docker-based browser test that publishes generated RTSP feeds and verifies WebRTC Director View, three-feed Multi-View, and HLS playback.
