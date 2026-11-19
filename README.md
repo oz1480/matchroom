@@ -1,23 +1,34 @@
 # Matchroom
 
-Matchroom is an interactive football viewing platform. This repository begins with the camera-engine foundation: a separately deployable stack for ingesting multiple authorized match-camera feeds and switching between them in a browser.
+Matchroom is an interactive football viewing platform. This repository is the camera-engine prototype: ingest multiple authorized camera feeds and let a viewer choose the angle in a browser.
+
+## Current capabilities
+
+- Three MediaMTX publisher paths: main, behind-goal, and tactical.
+- Spring Boot API catalogue with HLS and WHEP URLs.
+- WebRTC/WHEP browser playback as the preferred low-latency path.
+- HLS.js playback as a compatibility fallback.
+- Manual camera switching and reconnect control.
+- Docker Compose development stack and backend/frontend CI workflow.
+
+This is an engineering prototype, not a production broadcast platform. Latency and reliability must be measured with real authorized feeds before any service-level promise.
 
 ## Architecture
 
 ```text
 Authorized camera sources -- RTSP/TCP --> MediaMTX
-                                          |-- HLS :8888 --> React player
-                                          |-- WebRTC :8889 (next playback milestone)
+                                          |-- WebRTC/WHEP :8889 --> Browser (preferred)
+                                          |-- HLS :8888 ----------> Browser (fallback)
 Spring Boot API :8080 --------------------+--> camera catalogue
 ```
 
-The first browser playback path uses HLS for compatibility. Video processing does not run inside Spring Boot. MediaMTX is pinned to v1.21.4.
+Video ingestion, transcoding, and computer vision are deliberately kept outside Spring Boot.
 
-> **Rights and access:** only ingest and distribute feeds you are authorized to use. Stadium/broadcast camera access requires an agreement with a club, production provider, or broadcaster. This scaffold does not provide access to protected broadcasts.
+> **Rights and access:** only ingest and distribute feeds you are authorized to use. Stadium/broadcast camera access requires an agreement with a club, production provider, or broadcaster. This repository does not provide access to protected broadcasts.
 
 ## Run locally
 
-Requirements: Docker Desktop with Compose. Then run from the repository root:
+Requirements: Docker Desktop with Compose. From the repository root:
 
 ```bash
 docker compose up --build
@@ -27,43 +38,73 @@ docker compose up --build
 - API health: http://localhost:8080/actuator/health
 - Camera catalogue: http://localhost:8080/api/cameras
 - MediaMTX HLS: http://localhost:8888
+- MediaMTX WebRTC/WHEP: http://localhost:8889
 
-The camera list is available before publishers connect. The player will show a waiting state until a feed is publishing.
+The ports are bound to localhost for local development. Do not expose this configuration directly to the public internet.
 
-## Publish a test feed
+## Publish a generated test feed
 
-With FFmpeg installed, publish a generated test pattern (not broadcast footage):
+Install FFmpeg on the host. In a terminal, publish a generated test pattern (not broadcast footage):
 
 ```bash
 ffmpeg -re -f lavfi -i testsrc2=size=1280x720:rate=25 -f lavfi -i sine=frequency=440:sample_rate=48000 -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p -c:a aac -rtsp_transport tcp -f rtsp rtsp://localhost:8554/cam-main
 ```
 
-Repeat for `cam-behind-goal` and `cam-tactical`. HLS URLs:
+Repeat in separate terminals for `cam-behind-goal` and `cam-tactical`, changing the final path. The browser defaults to WebRTC; choose **Compatibility** if your network cannot establish the WebRTC connection.
+
+HLS URLs:
 
 - http://localhost:8888/cam-main/index.m3u8
 - http://localhost:8888/cam-behind-goal/index.m3u8
 - http://localhost:8888/cam-tactical/index.m3u8
 
-HLS is segment-based. Low-latency WebRTC playback, clock synchronization, audio mixing, and Smart Camera tracking are follow-on milestones, not claimed as complete.
+WebRTC uses WHEP session negotiation. ICE connectivity depends on the host/network; remote deployments need correct public IP/host advertisement, UDP reachability, and often a TURN server. The local config is not a production NAT traversal setup.
+
+## Configuration
+
+- `MATCHROOM_MEDIA_PUBLIC_BASE_URL`: public HLS base URL, default `http://localhost:8888`.
+- `MATCHROOM_MEDIA_WEBRTC_BASE_URL`: public WHEP base URL, default `http://localhost:8889`.
+- MediaMTX settings: `infra/mediamtx/mediamtx.yml`.
+
+When deploying outside localhost, update the public base URLs, CORS allowlists, WebRTC additional hosts, TLS, firewall rules, and TURN configuration together.
 
 ## Local development
 
-Backend: `cd backend && mvn spring-boot:run`
+Backend:
 
-Frontend: `cd frontend && npm install && npm run dev`
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Quality checks
+
+```bash
+cd backend && mvn --batch-mode verify
+cd frontend && npm install && npm run build
+```
+
+GitHub Actions runs backend tests and the frontend production build on pushes and pull requests.
 
 ## Roadmap
 
-1. Foundation: media server, camera catalogue, browser player, manual camera selection.
-2. Playback reliability: WebRTC/WHEP, reconnect strategy, feed health and latency telemetry.
-3. Synchronization: shared match clock, timestamp alignment, camera-switch discontinuity tests.
-4. Immersive audio: authorized ambient audio source and independent mix controls.
-5. Smart Camera: computer-vision ball/action framing with manual override.
-6. Multi-View: synchronized simultaneous feeds and responsive layouts.
+1. **Camera engine:** feed health, reconnect/backoff, measured end-to-end latency, and synchronized multi-camera clocks.
+2. **Director experience:** Multi-View layouts and seamless angle transitions.
+3. **Immersive audio:** authorized ambient audio source with independent mix controls.
+4. **Smart Camera:** computer-vision ball/action framing with manual override.
+5. **Pilot operations:** authenticated club/operator control plane, secure ingest credentials, monitoring, and a real-feed test with a rights-holding partner.
 
 ## Engineering principles
 
-- Keep media ingestion, transcoding, and computer vision outside Spring Boot.
-- Treat feed licensing and operational availability as first-class dependencies.
-- Measure latency, uptime, and synchronization before making live-performance promises.
-- Validate the smallest pilot with real authorized feeds before scaling.
+- Never put video transcoding or computer vision in the Spring Boot request path.
+- Treat feed licensing, availability, and security as first-class dependencies.
+- Measure latency, uptime, and synchronization before promising a live experience.
+- Do not treat generated test patterns as proof of real-match performance.
