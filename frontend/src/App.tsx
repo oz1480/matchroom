@@ -82,7 +82,6 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
       const connection = new RTCPeerConnection()
       peer = connection
       connection.addTransceiver('video', { direction: 'recvonly' })
-      connection.addTransceiver('audio', { direction: 'recvonly' })
       connection.ontrack = event => {
         if (disposed || !video) return
         if (event.streams[0]) video.srcObject = event.streams[0]
