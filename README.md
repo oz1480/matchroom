@@ -8,8 +8,10 @@ Matchroom is an interactive football viewing platform. This repository is the ca
 - Spring Boot API catalogue with HLS and WHEP URLs.
 - WebRTC/WHEP browser playback as the preferred low-latency path.
 - HLS.js playback as a compatibility fallback.
-- Manual camera switching and reconnect control.
-- Docker Compose development stack and backend/frontend CI workflow.
+- Manual Director View and a three-feed Multi-View preview.
+- WebRTC telemetry for negotiated video resolution, frame rate, and ICE round-trip time when available.
+- Reconnect control and a compatibility playback selector.
+- Docker Compose development stack, Windows test-feed scripts, and CI checks.
 
 This is an engineering prototype, not a production broadcast platform. Latency and reliability must be measured with real authorized feeds before any service-level promise.
 
@@ -108,8 +110,8 @@ GitHub Actions runs backend tests and the frontend production build on pushes an
 
 ## Roadmap
 
-1. **Camera engine:** feed health, reconnect/backoff, measured end-to-end latency, and synchronized multi-camera clocks.
-2. **Director experience:** Multi-View layouts and seamless angle transitions.
+1. **Camera engine hardening:** feed health, reconnect/backoff, measured end-to-end latency, and synchronized multi-camera clocks.
+2. **Director experience:** synchronized Multi-View and seamless angle transitions.
 3. **Immersive audio:** authorized ambient audio source with independent mix controls.
 4. **Smart Camera:** computer-vision ball/action framing with manual override.
 5. **Pilot operations:** authenticated club/operator control plane, secure ingest credentials, monitoring, and a real-feed test with a rights-holding partner.
