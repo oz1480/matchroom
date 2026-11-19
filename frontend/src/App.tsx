@@ -85,8 +85,9 @@ function CameraPlayer({ camera, mode, retryKey }: { camera: Camera; mode: Playba
           stream.addTrack(event.track)
           video.srcObject = stream
         }
-        void video.play().catch(() => setSafeState('waiting', 'Press play to start the live feed.'))
-        setSafeState('playing')
+        void video.play()
+          .then(() => setSafeState('playing'))
+          .catch(() => setSafeState('waiting', 'Press play to start the live feed.'))
       }
       peer.onconnectionstatechange = () => {
         if (peer?.connectionState === 'failed') {
